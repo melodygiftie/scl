@@ -101,6 +101,11 @@
   .about-image {
     max-width: 600px;
     margin: 0 auto;
+    width: 100%;
+  }
+
+  .about-shape {
+    display: none;
   }
 }
 
@@ -108,5 +113,9 @@
   .mission-vision {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .about-content h2 span {
+    font-size: 1.5rem;
   }
 }

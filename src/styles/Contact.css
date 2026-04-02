@@ -1,11 +1,12 @@
 .contact {
   background-color: var(--soft-blue);
+  overflow-x: hidden;
 }
 
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  gap: 0;
   background-color: var(--white);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
@@ -68,16 +69,25 @@
 .form-alert {
   padding: 1rem;
   border-radius: var(--border-radius-sm);
-  background-color: var(--peach);
-  color: var(--primary-dark);
   font-weight: 500;
   margin-bottom: 1rem;
+}
+
+.form-alert.success {
+  background-color: var(--peach);
+  color: var(--primary-dark);
   border-left: 4px solid var(--primary);
+}
+
+.form-alert.error {
+  background-color: #FCE4EC;
+  color: #b71c1c;
+  border-left: 4px solid #e53935;
 }
 
 .map-container {
   height: 100%;
-  min-height: 400px;
+  min-height: 500px;
   position: relative;
 }
 
@@ -144,16 +154,26 @@
 @media (max-width: 992px) {
   .contact-grid {
     grid-template-columns: 1fr;
-    gap: 0;
   }
-  
+
   .contact-form-container {
     padding: 3rem 2rem;
+  }
+
+  .map-container {
+    min-height: 400px;
   }
 }
 
 @media (max-width: 480px) {
   .contact-form-container {
-    padding: 2.5rem 1.5rem;
+    padding: 2rem 1.25rem;
+  }
+
+  .address-overlay {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    padding: 1rem;
   }
 }

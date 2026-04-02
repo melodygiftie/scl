@@ -1,5 +1,6 @@
 .services {
   background-color: var(--gray-100);
+  overflow-x: hidden;
 }
 
 .services-grid {
@@ -70,7 +71,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .services-grid {
     grid-template-columns: 1fr;
     gap: 2rem;

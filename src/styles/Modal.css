@@ -12,6 +12,7 @@
   z-index: 2000;
   padding: 1.5rem;
   animation: fadeIn 0.3s ease;
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -33,6 +34,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -52,6 +54,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .modal-close:hover {
@@ -95,6 +98,16 @@
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    padding: 1rem;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 90vh;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  }
+
   .modal-header {
     padding: 1.25rem 1.5rem;
   }

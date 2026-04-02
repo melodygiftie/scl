@@ -3,6 +3,7 @@
   top: 0;
   left: 0;
   width: 100%;
+  max-width: 100%;
   padding: 1rem 0;
   z-index: 1000;
   transition: all var(--transition-normal);
@@ -10,8 +11,6 @@
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
 }
-
-
 
 .navbar .container {
   display: flex;
@@ -77,6 +76,7 @@
   font-size: 1.5rem;
   cursor: pointer;
   transition: color var(--transition-normal);
+  z-index: 1001;
 }
 
 .navbar.scrolled .mobile-menu-btn {
@@ -87,19 +87,23 @@
   .mobile-menu-btn {
     display: block;
   }
-  
+
   .navbar-links {
-    position: absolute;
-    top: 100%;
+    position: fixed;
+    top: 0;
     left: 0;
     width: 100%;
+    height: 100vh;
     background-color: var(--white);
     flex-direction: column;
+    justify-content: center;
     padding: 2rem 0;
-    gap: 1.5rem;
+    gap: 2rem;
     box-shadow: var(--shadow-md);
     clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
     transition: clip-path 0.4s ease-in-out;
+    overflow: hidden;
+    z-index: 999;
   }
 
   .navbar-links.active {
@@ -108,6 +112,6 @@
 
   .navbar-links a {
     color: var(--text-dark);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
   }
 }
