@@ -109,6 +109,7 @@
   .navbar-links.active {
     display: flex;
   }
+  
 
   .navbar-links a {
     color: var(--text-dark);

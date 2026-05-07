@@ -51,6 +51,7 @@
   text-align: left;
   transition: color var(--transition-fast);
   opacity: 0.8;
+  text-decoration: none;
 }
 
 .footer-links button:hover,
@@ -59,15 +60,107 @@
   opacity: 1;
 }
 
+/* ── Socials ── */
+.footer-socials {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+}
+
+.footer-socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--soft-blue);
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  opacity: 0.85;
+}
+
+.footer-socials a:hover {
+  background: var(--peach);
+  color: var(--white);
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+.footer-socials svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+/* ── Footer bottom ── */
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 2rem;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--soft-blue);
-  opacity: 0.6;
   font-size: 0.875rem;
 }
 
+.footer-bottom p {
+  margin: 0;
+  opacity: 0.6;
+}
+
+.footer-bottom-credit {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  color: var(--soft-blue);
+  letter-spacing: 0.01em;
+}
+
+.footer-bottom-credit span.label {
+  font-weight: 400;
+}
+
+.footer-bottom-credit a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: relative;
+  transition: color var(--transition-fast);
+}
+
+.footer-bottom-credit a::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--peach);
+  transition: width var(--transition-fast);
+}
+
+.footer-bottom-credit a:hover {
+  color: var(--peach);
+}
+
+.footer-bottom-credit a:hover::after {
+  width: 100%;
+}
+
+.footer-bottom-credit .divider {
+  opacity: 0.3;
+  margin: 0 0.1rem;
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
@@ -76,6 +169,13 @@
 
   .footer-brand {
     grid-column: 1 / -1;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
   }
 }
 

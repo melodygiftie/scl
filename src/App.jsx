@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AOS from 'aos';
 
-// Components
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -10,28 +10,44 @@ import Path from './components/Path';
 import Contact from './components/Contact';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
+import WhatsAppButton from './components/WhatsAppButton';
+import CookieBanner from './components/CookieBanner';
+import SurrogateForm from './components/SurrogateForm';
 
-function App() {
-  useEffect(() => {
-    AOS.init({
-      once: true, // whether animation should happen only once - while scrolling down
-      offset: 100, // offset (in px) from the original trigger point
-      duration: 1000, // values from 0 to 3000, with step 50ms
-      easing: 'ease-out-cubic', // default easing for AOS animations
-    });
-  }, []);
-
+function HomePage() {
   return (
     <>
-      <Navbar />
       <Hero />
       <About />
       <Services />
       <Path />
       <Testimonials />
       <Contact />
-      <Footer />
     </>
+  );
+}
+
+function App() {
+  useEffect(() => {
+    AOS.init({
+      once: true,
+      offset: 100,
+      duration: 1000,
+      easing: 'ease-out-cubic',
+    });
+  }, []);
+
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/apply" element={<SurrogateForm />} />
+      </Routes>
+      <Footer />
+      <WhatsAppButton />
+      <CookieBanner />
+    </BrowserRouter>
   );
 }
 
