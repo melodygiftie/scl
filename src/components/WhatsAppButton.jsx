@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 export default function WhatsAppButton() {
-  const phone = '2348000000000'; // ← Replace with your WhatsApp number
+  const phone = '+2348184323182'; // ← Replace with your WhatsApp number
   const greeting = 'Hello, I would like to know more about your surrogacy services.';
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState('');
