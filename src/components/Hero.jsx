@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
-import { scrollToSection } from './Navbar';
+import { scrollToSection } from '../utils/scrollToSection';
 import '../styles/Hero.css';
 
 const Hero = () => {

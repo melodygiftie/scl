@@ -84,8 +84,8 @@ const Services = () => {
               </p>
               <ul className="surrogate-cta__perks">
                 <li><span className="perk-dot" />Fully guided application process</li>
-                <li><span className="perk-dot" />Legal protection &amp; fair compensation</li>
-                <li><span className="perk-dot" />Ongoing medical &amp; emotional support</li>
+                <li><span className="perk-dot" />Legal protection & fair compensation</li>
+                <li><span className="perk-dot" />Ongoing medical & emotional support</li>
               </ul>
             </div>
           </div>
