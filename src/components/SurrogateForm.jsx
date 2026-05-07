@@ -2,6 +2,88 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SurrogateForm.css';
 
+// ── Sub-components defined OUTSIDE the parent so React never
+//    unmounts/remounts them on re-render, preserving input focus. ──
+
+const Field = ({ label, name, required, errors, children }) => (
+  <div className={`sf-field${errors[name] ? ' sf-field--error' : ''}`}>
+    <label className="sf-label">
+      {label}{required && <span className="sf-required"> *</span>}
+    </label>
+    {children}
+    {errors[name] && <span className="sf-error-msg">{errors[name]}</span>}
+  </div>
+);
+
+const Input = ({ name, type = 'text', placeholder, maxLength, formData, errors, handleChange }) => (
+  <input
+    className={`sf-input${errors[name] ? ' sf-input--error' : ''}`}
+    type={type}
+    name={name}
+    value={formData[name]}
+    onChange={handleChange}
+    placeholder={placeholder}
+    maxLength={maxLength}
+    onClick={type === 'date' ? (e) => { try { e.target.showPicker(); } catch (_) {} } : undefined}
+  />
+);
+
+const Select = ({ name, options, placeholder, formData, errors, handleChange }) => (
+  <select
+    className={`sf-input sf-select${errors[name] ? ' sf-input--error' : ''}`}
+    name={name}
+    value={formData[name]}
+    onChange={handleChange}
+  >
+    <option value="">{placeholder}</option>
+    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+  </select>
+);
+
+const RadioGroup = ({ name, options, formData, handleChange }) => (
+  <div className="sf-radio-group">
+    {options.map(o => (
+      <label
+        key={o.value}
+        className={`sf-radio${formData[name] === o.value ? ' sf-radio--checked' : ''}`}
+      >
+        <input
+          type="radio"
+          name={name}
+          value={o.value}
+          checked={formData[name] === o.value}
+          onChange={handleChange}
+        />
+        {o.label}
+      </label>
+    ))}
+  </div>
+);
+
+const Textarea = ({ name, placeholder, rows = 4, maxLength = 1000, formData, errors, handleChange }) => (
+  <div>
+    <textarea
+      className={`sf-input sf-textarea${errors[name] ? ' sf-input--error' : ''}`}
+      name={name}
+      value={formData[name]}
+      onChange={handleChange}
+      placeholder={placeholder}
+      rows={rows}
+      maxLength={maxLength}
+    />
+    <span style={{
+      display: 'block',
+      textAlign: 'right',
+      fontSize: '0.72rem',
+      color: formData[name].length >= maxLength * 0.9 ? '#c0392b' : '#888',
+      marginTop: '0.25rem',
+    }}>
+      {formData[name].length} / {maxLength}
+    </span>
+  </div>
+);
+
+// ── Main component ──────────────────────────────────────────────
 const SurrogateForm = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -148,6 +230,7 @@ const SurrogateForm = () => {
     e.preventDefault();
     if (!validateStep(step)) return;
     setLoading(true);
+
     const body = `
 SURROGATE APPLICATION — ${formData.firstName} ${formData.lastName}
 ${'='.repeat(50)}
@@ -234,60 +317,11 @@ Additional Info: ${formData.additionalInfo}
     }
   };
 
-  // ── Sub-components ──────────────────────────────────────────────
-  const Field = ({ label, name, required, children }) => (
-    <div className={`sf-field${errors[name] ? ' sf-field--error' : ''}`}>
-      <label className="sf-label">
-        {label}{required && <span className="sf-required"> *</span>}
-      </label>
-      {children}
-      {errors[name] && <span className="sf-error-msg">{errors[name]}</span>}
-    </div>
-  );
-
-  const Input = ({ name, type = 'text', placeholder }) => (
-    <input
-      className={`sf-input${errors[name] ? ' sf-input--error' : ''}`}
-      type={type}
-      name={name}
-      value={formData[name]}
-      onChange={handleChange}
-      placeholder={placeholder}
-    />
-  );
-
-  const Select = ({ name, options, placeholder }) => (
-    <select
-      className={`sf-input sf-select${errors[name] ? ' sf-input--error' : ''}`}
-      name={name}
-      value={formData[name]}
-      onChange={handleChange}
-    >
-      <option value="">{placeholder}</option>
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
-  );
-
-  const RadioGroup = ({ name, options }) => (
-    <div className="sf-radio-group">
-      {options.map(o => (
-        <label key={o.value} className={`sf-radio${formData[name] === o.value ? ' sf-radio--checked' : ''}`}>
-          <input
-            type="radio"
-            name={name}
-            value={o.value}
-            checked={formData[name] === o.value}
-            onChange={handleChange}
-          />
-          {o.label}
-        </label>
-      ))}
-    </div>
-  );
+  // Shared props passed down to every input component
+  const inputProps = { formData, errors, handleChange };
 
   return (
     <div className="sf-page">
-      {/* Page header */}
       <div className="sf-page-header">
         <button className="sf-back-link" onClick={() => navigate(-1)} aria-label="Go back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
@@ -302,7 +336,6 @@ Additional Info: ${formData.additionalInfo}
       </div>
 
       <div className="sf-page-body">
-        {/* Progress stepper */}
         <div className="sf-stepper">
           {stepConfig.map((s, i) => (
             <React.Fragment key={s.number}>
@@ -319,12 +352,13 @@ Additional Info: ${formData.additionalInfo}
                   <span className="sf-step-sublabel">{s.sublabel}</span>
                 </div>
               </div>
-              {i < stepConfig.length - 1 && <div className={`sf-step-connector ${step > s.number ? 'sf-step-connector--done' : ''}`} />}
+              {i < stepConfig.length - 1 && (
+                <div className={`sf-step-connector ${step > s.number ? 'sf-step-connector--done' : ''}`} />
+              )}
             </React.Fragment>
           ))}
         </div>
 
-        {/* Success state */}
         {submitted ? (
           <div className="sf-success">
             <div className="sf-success-icon">
@@ -358,49 +392,49 @@ Additional Info: ${formData.additionalInfo}
                 </div>
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="First Name" name="firstName" required>
-                    <Input name="firstName" placeholder="e.g. Amina" />
+                  <Field label="First Name" name="firstName" required errors={errors}>
+                    <Input name="firstName" placeholder="e.g. Amina" maxLength={100} {...inputProps} />
                   </Field>
-                  <Field label="Last Name" name="lastName" required>
-                    <Input name="lastName" placeholder="e.g. Okafor" />
-                  </Field>
-                </div>
-
-                <div className="sf-grid sf-grid--2">
-                  <Field label="Email Address" name="email" required>
-                    <Input name="email" type="email" placeholder="you@example.com" />
-                  </Field>
-                  <Field label="Phone Number" name="phone" required>
-                    <Input name="phone" type="tel" placeholder="+234 800 000 0000" />
+                  <Field label="Last Name" name="lastName" required errors={errors}>
+                    <Input name="lastName" placeholder="e.g. Okafor" maxLength={100} {...inputProps} />
                   </Field>
                 </div>
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="Date of Birth" name="dateOfBirth" required>
-                    <Input name="dateOfBirth" type="date" />
+                  <Field label="Email Address" name="email" required errors={errors}>
+                    <Input name="email" type="email" placeholder="you@example.com" maxLength={200} {...inputProps} />
                   </Field>
-                  <Field label="Nationality" name="nationality">
-                    <Input name="nationality" placeholder="e.g. Nigerian" />
+                  <Field label="Phone Number" name="phone" required errors={errors}>
+                    <Input name="phone" type="tel" placeholder="+234 800 000 0000" maxLength={20} {...inputProps} />
                   </Field>
                 </div>
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="State of Residence" name="stateOfResidence" required>
-                    <Input name="stateOfResidence" placeholder="e.g. Abuja (FCT)" />
+                  <Field label="Date of Birth" name="dateOfBirth" required errors={errors}>
+                    <Input name="dateOfBirth" type="date" {...inputProps} />
                   </Field>
-                  <Field label="City / LGA" name="city">
-                    <Input name="city" placeholder="e.g. Garki" />
+                  <Field label="Nationality" name="nationality" errors={errors}>
+                    <Input name="nationality" placeholder="e.g. Nigerian" maxLength={100} {...inputProps} />
                   </Field>
                 </div>
 
-                <Field label="Marital Status" name="maritalStatus" required>
+                <div className="sf-grid sf-grid--2">
+                  <Field label="State of Residence" name="stateOfResidence" required errors={errors}>
+                    <Input name="stateOfResidence" placeholder="e.g. Abuja (FCT)" maxLength={100} {...inputProps} />
+                  </Field>
+                  <Field label="City / LGA" name="city" errors={errors}>
+                    <Input name="city" placeholder="e.g. Garki" maxLength={100} {...inputProps} />
+                  </Field>
+                </div>
+
+                <Field label="Marital Status" name="maritalStatus" required errors={errors}>
                   <Select name="maritalStatus" placeholder="Select status" options={[
                     { value: 'single', label: 'Single' },
                     { value: 'married', label: 'Married' },
                     { value: 'divorced', label: 'Divorced' },
                     { value: 'widowed', label: 'Widowed' },
                     { value: 'separated', label: 'Separated' },
-                  ]} />
+                  ]} {...inputProps} />
                 </Field>
               </div>
             )}
@@ -421,70 +455,70 @@ Additional Info: ${formData.additionalInfo}
                 </div>
 
                 <div className="sf-grid sf-grid--3">
-                  <Field label="Height (cm)" name="height">
-                    <Input name="height" type="number" placeholder="e.g. 165" />
+                  <Field label="Height (cm)" name="height" errors={errors}>
+                    <Input name="height" type="number" placeholder="e.g. 165" {...inputProps} />
                   </Field>
-                  <Field label="Weight (kg)" name="weight">
-                    <Input name="weight" type="number" placeholder="e.g. 65" />
+                  <Field label="Weight (kg)" name="weight" errors={errors}>
+                    <Input name="weight" type="number" placeholder="e.g. 65" {...inputProps} />
                   </Field>
-                  <Field label="Blood Group" name="bloodGroup" required>
+                  <Field label="Blood Group" name="bloodGroup" required errors={errors}>
                     <Select name="bloodGroup" placeholder="Select" options={[
                       { value: 'A+', label: 'A+' }, { value: 'A-', label: 'A-' },
                       { value: 'B+', label: 'B+' }, { value: 'B-', label: 'B-' },
                       { value: 'AB+', label: 'AB+' }, { value: 'AB-', label: 'AB-' },
                       { value: 'O+', label: 'O+' }, { value: 'O-', label: 'O-' },
-                    ]} />
+                    ]} {...inputProps} />
                   </Field>
                 </div>
 
-                <Field label="Have you carried a pregnancy to term before?" name="hasCarriedBefore" required>
-                  <RadioGroup name="hasCarriedBefore" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Have you carried a pregnancy to term before?" name="hasCarriedBefore" required errors={errors}>
+                  <RadioGroup name="hasCarriedBefore" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
 
                 {formData.hasCarriedBefore === 'yes' && (
                   <div className="sf-grid sf-grid--2">
-                    <Field label="Number of children" name="numberOfChildren" required>
-                      <Input name="numberOfChildren" type="number" placeholder="e.g. 2" />
+                    <Field label="Number of children" name="numberOfChildren" required errors={errors}>
+                      <Input name="numberOfChildren" type="number" placeholder="e.g. 2" {...inputProps} />
                     </Field>
-                    <Field label="Ages of children" name="childrenAges">
-                      <Input name="childrenAges" placeholder="e.g. 3, 7" />
+                    <Field label="Ages of children" name="childrenAges" errors={errors}>
+                      <Input name="childrenAges" placeholder="e.g. 3, 7" maxLength={100} {...inputProps} />
                     </Field>
                   </div>
                 )}
 
-                <Field label="Did you have any complicated pregnancies?" name="hadComplicatedPregnancy">
-                  <RadioGroup name="hadComplicatedPregnancy" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Did you have any complicated pregnancies?" name="hadComplicatedPregnancy" errors={errors}>
+                  <RadioGroup name="hadComplicatedPregnancy" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
                 {formData.hadComplicatedPregnancy === 'yes' && (
-                  <Field label="Please describe the complications" name="complicationDetails">
-                    <textarea className="sf-input sf-textarea" name="complicationDetails" value={formData.complicationDetails} onChange={handleChange} placeholder="Brief description..." rows={3} />
+                  <Field label="Please describe the complications" name="complicationDetails" errors={errors}>
+                    <Textarea name="complicationDetails" placeholder="Brief description..." rows={3} maxLength={500} {...inputProps} />
                   </Field>
                 )}
 
-                <Field label="Do you have any chronic illness or medical condition?" name="hasChronicIllness">
-                  <RadioGroup name="hasChronicIllness" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Do you have any chronic illness or medical condition?" name="hasChronicIllness" errors={errors}>
+                  <RadioGroup name="hasChronicIllness" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
                 {formData.hasChronicIllness === 'yes' && (
-                  <Field label="Please describe your condition(s)" name="illnessDetails">
-                    <textarea className="sf-input sf-textarea" name="illnessDetails" value={formData.illnessDetails} onChange={handleChange} placeholder="Brief description..." rows={3} />
+                  <Field label="Please describe your condition(s)" name="illnessDetails" errors={errors}>
+                    <Textarea name="illnessDetails" placeholder="Brief description..." rows={3} maxLength={500} {...inputProps} />
                   </Field>
                 )}
 
-                <Field label="Are you currently on any medication?" name="onMedication">
-                  <RadioGroup name="onMedication" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Are you currently on any medication?" name="onMedication" errors={errors}>
+                  <RadioGroup name="onMedication" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
                 {formData.onMedication === 'yes' && (
-                  <Field label="Please list your medications" name="medicationDetails">
-                    <Input name="medicationDetails" placeholder="e.g. Metformin 500mg" />
+                  <Field label="Please list your medications" name="medicationDetails" errors={errors}>
+                    <Input name="medicationDetails" placeholder="e.g. Metformin 500mg" maxLength={300} {...inputProps} />
                   </Field>
                 )}
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="Do you smoke?" name="smokes">
-                    <RadioGroup name="smokes" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                  <Field label="Do you smoke?" name="smokes" errors={errors}>
+                    <RadioGroup name="smokes" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                   </Field>
-                  <Field label="Do you drink alcohol?" name="drinksAlcohol">
-                    <RadioGroup name="drinksAlcohol" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }]} />
+                  <Field label="Do you drink alcohol?" name="drinksAlcohol" errors={errors}>
+                    <RadioGroup name="drinksAlcohol" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'occasionally', label: 'Occasionally' }]} {...inputProps} />
                   </Field>
                 </div>
               </div>
@@ -505,65 +539,58 @@ Additional Info: ${formData.additionalInfo}
                   </div>
                 </div>
 
-                <Field label="Have you been a surrogate before?" name="hasBeenSurrogateBefore">
-                  <RadioGroup name="hasBeenSurrogateBefore" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Have you been a surrogate before?" name="hasBeenSurrogateBefore" errors={errors}>
+                  <RadioGroup name="hasBeenSurrogateBefore" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
 
-                <Field label="Why do you want to become a surrogate?" name="motivationForSurrogacy" required>
-                  <textarea
-                    className={`sf-input sf-textarea${errors.motivationForSurrogacy ? ' sf-input--error' : ''}`}
-                    name="motivationForSurrogacy"
-                    value={formData.motivationForSurrogacy}
-                    onChange={handleChange}
-                    placeholder="Share your motivation in your own words..."
-                    rows={4}
-                  />
+                <Field label="Why do you want to become a surrogate?" name="motivationForSurrogacy" required errors={errors}>
+                  <Textarea name="motivationForSurrogacy" placeholder="Share your motivation in your own words..." rows={5} maxLength={1000} {...inputProps} />
                 </Field>
 
-                <Field label="Preferred surrogacy arrangement" name="preferredArrangement">
+                <Field label="Preferred surrogacy arrangement" name="preferredArrangement" errors={errors}>
                   <Select name="preferredArrangement" placeholder="Select" options={[
                     { value: 'gestational', label: 'Gestational (no genetic link)' },
                     { value: 'traditional', label: 'Traditional (genetic link)' },
                     { value: 'unsure', label: 'Not sure yet' },
-                  ]} />
+                  ]} {...inputProps} />
                 </Field>
 
-                <Field label="When are you available to start?" name="availableToStart" required>
+                <Field label="When are you available to start?" name="availableToStart" required errors={errors}>
                   <Select name="availableToStart" placeholder="Select" options={[
                     { value: 'immediately', label: 'Immediately' },
                     { value: '1_3_months', label: 'Within 1–3 months' },
                     { value: '3_6_months', label: 'Within 3–6 months' },
                     { value: '6_plus_months', label: '6+ months from now' },
-                  ]} />
+                  ]} {...inputProps} />
                 </Field>
 
                 <div className="sf-consent-block">
                   <div className="sf-consent-item">
                     <span className="sf-consent-label">Willing to undergo medical examination?</span>
-                    <RadioGroup name="willingForMedicalExam" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                    <RadioGroup name="willingForMedicalExam" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                     {errors.willingForMedicalExam && <span className="sf-error-msg">{errors.willingForMedicalExam}</span>}
                   </div>
                   <div className="sf-consent-item">
                     <span className="sf-consent-label">Willing to undergo psychological evaluation?</span>
-                    <RadioGroup name="willingForPsychEval" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                    <RadioGroup name="willingForPsychEval" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                   </div>
                   <div className="sf-consent-item">
                     <span className="sf-consent-label">Willing to sign legal agreement?</span>
-                    <RadioGroup name="willingToSignLegalAgreement" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                    <RadioGroup name="willingToSignLegalAgreement" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                     {errors.willingToSignLegalAgreement && <span className="sf-error-msg">{errors.willingToSignLegalAgreement}</span>}
                   </div>
                 </div>
 
-                <Field label="Do you have your partner's / spouse's consent?" name="hasPartnerConsent">
+                <Field label="Do you have your partner's / spouse's consent?" name="hasPartnerConsent" errors={errors}>
                   <RadioGroup name="hasPartnerConsent" options={[
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
                     { value: 'na', label: 'Not Applicable' },
-                  ]} />
+                  ]} {...inputProps} />
                 </Field>
                 {formData.hasPartnerConsent === 'yes' && (
-                  <Field label="Partner / Spouse Full Name" name="partnerName">
-                    <Input name="partnerName" placeholder="Partner's full name" />
+                  <Field label="Partner / Spouse Full Name" name="partnerName" errors={errors}>
+                    <Input name="partnerName" placeholder="Partner's full name" maxLength={150} {...inputProps} />
                   </Field>
                 )}
               </div>
@@ -586,7 +613,7 @@ Additional Info: ${formData.additionalInfo}
                 </div>
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="Highest Education Level" name="educationLevel">
+                  <Field label="Highest Education Level" name="educationLevel" errors={errors}>
                     <Select name="educationLevel" placeholder="Select" options={[
                       { value: 'no_formal', label: 'No Formal Education' },
                       { value: 'primary', label: 'Primary School' },
@@ -596,15 +623,15 @@ Additional Info: ${formData.additionalInfo}
                       { value: 'bsc', label: "Bachelor's Degree" },
                       { value: 'postgraduate', label: 'Postgraduate' },
                       { value: 'vocational', label: 'Vocational / Technical' },
-                    ]} />
+                    ]} {...inputProps} />
                   </Field>
-                  <Field label="Occupation" name="occupation">
-                    <Input name="occupation" placeholder="e.g. Nurse, Teacher, Trader" />
+                  <Field label="Occupation" name="occupation" errors={errors}>
+                    <Input name="occupation" placeholder="e.g. Nurse, Teacher, Trader" maxLength={150} {...inputProps} />
                   </Field>
                 </div>
 
                 <div className="sf-grid sf-grid--2">
-                  <Field label="Employment Status" name="employmentStatus">
+                  <Field label="Employment Status" name="employmentStatus" errors={errors}>
                     <Select name="employmentStatus" placeholder="Select" options={[
                       { value: 'employed_full', label: 'Employed (Full-time)' },
                       { value: 'employed_part', label: 'Employed (Part-time)' },
@@ -612,20 +639,20 @@ Additional Info: ${formData.additionalInfo}
                       { value: 'unemployed', label: 'Unemployed' },
                       { value: 'student', label: 'Student' },
                       { value: 'homemaker', label: 'Homemaker' },
-                    ]} />
+                    ]} {...inputProps} />
                   </Field>
-                  <Field label="Living Situation" name="livingSituation">
+                  <Field label="Living Situation" name="livingSituation" errors={errors}>
                     <Select name="livingSituation" placeholder="Select" options={[
                       { value: 'own_home', label: 'Own Home' },
                       { value: 'renting', label: 'Renting' },
                       { value: 'with_family', label: 'Living with Family' },
                       { value: 'other', label: 'Other' },
-                    ]} />
+                    ]} {...inputProps} />
                   </Field>
                 </div>
 
-                <Field label="Do you have health insurance?" name="hasHealthInsurance">
-                  <RadioGroup name="hasHealthInsurance" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+                <Field label="Do you have health insurance?" name="hasHealthInsurance" errors={errors}>
+                  <RadioGroup name="hasHealthInsurance" options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} {...inputProps} />
                 </Field>
 
                 <div className="sf-divider-section">
@@ -638,19 +665,19 @@ Additional Info: ${formData.additionalInfo}
                 </div>
 
                 <div className="sf-grid sf-grid--3">
-                  <Field label="Contact Name" name="emergencyContactName" required>
-                    <Input name="emergencyContactName" placeholder="Full name" />
+                  <Field label="Contact Name" name="emergencyContactName" required errors={errors}>
+                    <Input name="emergencyContactName" placeholder="Full name" maxLength={150} {...inputProps} />
                   </Field>
-                  <Field label="Phone Number" name="emergencyContactPhone" required>
-                    <Input name="emergencyContactPhone" type="tel" placeholder="+234 800 000 0000" />
+                  <Field label="Phone Number" name="emergencyContactPhone" required errors={errors}>
+                    <Input name="emergencyContactPhone" type="tel" placeholder="+234 800 000 0000" maxLength={20} {...inputProps} />
                   </Field>
-                  <Field label="Relationship" name="emergencyContactRelationship">
-                    <Input name="emergencyContactRelationship" placeholder="e.g. Husband, Sister" />
+                  <Field label="Relationship" name="emergencyContactRelationship" errors={errors}>
+                    <Input name="emergencyContactRelationship" placeholder="e.g. Husband, Sister" maxLength={100} {...inputProps} />
                   </Field>
                 </div>
 
-                <Field label="Additional information (optional)" name="additionalInfo">
-                  <textarea className="sf-input sf-textarea" name="additionalInfo" value={formData.additionalInfo} onChange={handleChange} placeholder="Anything else relevant to your application..." rows={3} />
+                <Field label="Additional information (optional)" name="additionalInfo" errors={errors}>
+                  <Textarea name="additionalInfo" placeholder="Anything else relevant to your application..." rows={4} maxLength={1000} {...inputProps} />
                 </Field>
 
                 <div className="sf-checkboxes">

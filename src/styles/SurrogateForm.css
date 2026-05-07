@@ -1,6 +1,5 @@
 /* ══════════════════════════════════════════════════════
    SurrogateForm.css — standalone page layout
-   (modal overlay / sf-overlay / sf-modal classes removed)
    ══════════════════════════════════════════════════════ */
 
 /* ── Root isolation — force light theme ── */
@@ -12,7 +11,7 @@
 
 .sf-page {
   color: #111827;
-  min-height: calc(100vh - 80px); /* account for navbar height */
+  min-height: calc(100vh - 80px);
   background: #f7f8fa;
   padding: 6rem 1.5rem 5rem;
 }
@@ -70,7 +69,7 @@
   overflow: hidden;
 }
 
-/* ── Stepper (replaces .sf-progress / modal header) ── */
+/* ── Stepper ── */
 .sf-stepper {
   display: flex;
   align-items: center;
@@ -308,7 +307,15 @@
   background: #fffafa;
 }
 
-/* ── Inputs ── */
+/* ── Inputs ──
+   FIX: Removed -webkit-text-fill-color from base .sf-input — it was
+   overriding the browser's native text cursor colour and causing inputs
+   to appear uneditable in Safari/WebKit.  Colour is set via `color`
+   only. -webkit-text-fill-color is kept ONLY on placeholder (below).
+   FIX: Removed any overflow:hidden that could clip textarea handles.
+   FIX: position:relative + z-index:1 ensure no sibling/parent overlay
+   accidentally intercepts pointer events on inputs.
+── */
 .sf-input {
   width: 100%;
   padding: 0.6rem 0.875rem;
@@ -317,10 +324,13 @@
   font-size: 0.875rem;
   font-family: inherit;
   color: #111827;
-  background: #fff;
+  background: #ffffff;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
-  -webkit-text-fill-color: #111827;
+  /* FIX: do NOT set -webkit-text-fill-color here — it blocks cursor & editing in Safari */
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .sf-input:focus {
@@ -328,6 +338,8 @@
   box-shadow: 0 0 0 3px rgba(200, 169, 126, 0.15);
 }
 
+/* FIX: -webkit-text-fill-color is safe on ::placeholder because
+   placeholder text is never editable */
 .sf-input::placeholder {
   color: #bcc0c9;
   -webkit-text-fill-color: #bcc0c9;
@@ -341,18 +353,75 @@
 .sf-select {
   cursor: pointer;
   appearance: none;
+  -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0ad' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.875rem center;
-  background-color: #fff;
+  background-color: #ffffff;
   padding-right: 2.5rem;
-  -webkit-text-fill-color: #111827;
+  /* FIX: no -webkit-text-fill-color — let browser render select text naturally */
 }
 
+/* ── Textarea ──
+   FIX: explicit min-height using em units so it scales with font size.
+   FIX: overflow:auto (not hidden) so the resize handle is accessible.
+   FIX: display:block + width:100% prevent collapsed zero-height rendering.
+── */
 .sf-textarea {
+  display: block;
+  width: 100%;
   resize: vertical;
-  min-height: 80px;
+  min-height: 6rem;
   line-height: 1.6;
+  overflow: auto;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background: #fff !important;
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.6rem 0.875rem;
+  border: 1.5px solid #dde1e8;
+  border-radius: 8px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sf-textarea:focus {
+  border-color: #c8a97e;
+  box-shadow: 0 0 0 3px rgba(200, 169, 126, 0.15);
+}
+
+.sf-textarea::placeholder {
+  color: #bcc0c9 !important;
+  -webkit-text-fill-color: #bcc0c9 !important;
+}
+
+
+/* ── Date input ──
+   FIX: ensure the calendar icon area is clickable and not covered.
+   Some CSS resets set padding-right too small, clipping the picker icon.
+── */
+input[type="date"].sf-input {
+  padding-right: 0.875rem;
+  cursor: pointer;
+  /* Ensure the native date picker button area is not clipped */
+  min-width: 0;
+}
+
+/* Normalise the internal date picker button in WebKit */
+input[type="date"].sf-input::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  /* FIX: make the hit area the full right side, not just a tiny icon */
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+input[type="date"].sf-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* ── Radio group ── */
@@ -376,9 +445,20 @@
   background: #fff;
   font-weight: 500;
   user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
 }
 
-.sf-radio input[type="radio"] { display: none; }
+/* FIX: hide the native radio visually but keep it accessible —
+   do NOT use display:none on the input itself inside a label with
+   pointer-events:none or it breaks click registration on some browsers */
+.sf-radio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
 
 .sf-radio--checked {
   border-color: #c8a97e;
@@ -411,6 +491,7 @@
   color: #374151;
   cursor: pointer;
   line-height: 1.55;
+  pointer-events: auto;
 }
 
 .sf-checkbox input[type="checkbox"] {
@@ -420,6 +501,9 @@
   margin-top: 2px;
   accent-color: #c8a97e;
   cursor: pointer;
+  pointer-events: auto;
+  /* FIX: do NOT set appearance:none unless you draw a custom checkmark —
+     leaving it as default lets the browser render its native tick + focus ring */
 }
 
 .sf-checkbox--error { color: #c0392b; }
@@ -473,6 +557,7 @@
   align-items: center;
   gap: 0.4rem;
   letter-spacing: -0.005em;
+  pointer-events: auto;
 }
 
 .sf-btn--primary {
@@ -582,7 +667,7 @@
   }
 
   .sf-step-meta {
-    display: none; /* show icon only on small screens */
+    display: none;
   }
 
   .sf-step-connector {
